@@ -63,15 +63,15 @@ human-in-the-loop interrupt/resume via checkpointing.
                                            +-> :hold               (:hard? true)
 ```
 
-- `src/architecture/store.cljc` — `Store` protocol + `MemStore`:
+- `src/architecture/store.kotoba` — `Store` protocol + `MemStore`:
   registered projects/clients, committed design records, an append-only audit ledger.
-- `src/architecture/advisor.cljc` — `Advisor` protocol; `mock-advisor`
+- `src/architecture/advisor.kotoba` — `Advisor` protocol; `mock-advisor`
   (deterministic, default) proposes a design operation from a
   request; `llm-advisor` wraps a `langchain.model/ChatModel` — either
   way the advisor only ever produces a `:propose`-effect proposal,
   never a final stamp, and LLM parse failures always yield
   `confidence 0.0` (forces escalation, never fabricated confidence).
-- `src/architecture/governor.cljc` — `ArchitectureGovernor/check`: a pure
+- `src/architecture/governor.kotoba` — `ArchitectureGovernor/check`: a pure
   function, wired as its own `:govern` node. Hard invariants
   (unregistered project, a proposal whose `:effect` isn't `:propose`,
   any attempt to issue a stamped design or certify compliance)
@@ -82,7 +82,7 @@ human-in-the-loop interrupt/resume via checkpointing.
   (`actor/approve!`), matching the README's robotics-premise statement
   that stamped designs and compliance certification always remain the
   licensed architect's sole responsibility.
-- `src/architecture/actor.cljc` — `build-graph`, `run-request!`,
+- `src/architecture/actor.kotoba` — `build-graph`, `run-request!`,
   `approve!`: the `langgraph.graph/state-graph` wiring itself.
 
 ```bash
