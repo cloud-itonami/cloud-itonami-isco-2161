@@ -70,11 +70,18 @@ human-in-the-loop interrupt/resume via checkpointing.
   request; `llm-advisor` wraps a `langchain.model/ChatModel` — either
   way the advisor only ever produces a `:propose`-effect proposal,
   never a final stamp, and LLM parse failures always yield
-  `confidence 0.0` (forces escalation, never fabricated confidence).
+  `{:op :unknown :confidence 0.0}` (never fabricated confidence), which the
+  governor holds as an op outside the catalog.
+- `src/architecture/operations.kotoba` — the closed vocabulary of ops:
+  `:draft-design-concept`, `:prepare-specification`,
+  `:flag-code-compliance-issue`, `:request-client-review` are permitted;
+  `:issue-stamped-design` and `:certify-code-compliance` are forbidden. Any
+  other op is refused.
 - `src/architecture/governor.kotoba` — `ArchitectureGovernor/check`: a pure
   function, wired as its own `:govern` node. Hard invariants
   (unregistered project, a proposal whose `:effect` isn't `:propose`,
-  any attempt to issue a stamped design or certify compliance)
+  any attempt to issue a stamped design or certify compliance, an `:op`
+  outside `architecture.operations`)
   always route to `:hold`. Escalation invariants (code compliance
   flags, structural/life-safety systems, or low advisor confidence) always route to
   `:request-approval` — an `interrupt-before` node that the graph
@@ -86,8 +93,19 @@ human-in-the-loop interrupt/resume via checkpointing.
   `approve!`: the `langgraph.graph/state-graph` wiring itself.
 
 ```bash
-kbb -M:test
+kbb --backend sci test/run_suite.cljk
 ```
+
+The suite is **20 tests / 55 assertions**. `test/run_suite.cljk` reads that
+sentence and refuses (exit 2) any run that comes in under it. `kbb -M:test`
+does not run this suite: the sources are `.kotoba`, which the test runner does
+not collect.
+
+Before `architecture.operations` (2026-09-24) the governor accepted any op it
+had not heard of: `{:op :order-demolition :effect :propose :confidence 0.9}`
+for a registered project was `:ok? true` and committed a design record with no
+architect sign-off. `hard-on-op-outside-the-catalog` and
+`end-to-end-hold-on-op-outside-the-catalog` pin the refusal.
 
 This is what backs this repo's `:maturity :implemented` entry in
 [`kotoba-lang/occupation`](https://github.com/kotoba-lang/occupation).
