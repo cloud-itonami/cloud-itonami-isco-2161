@@ -1,0 +1,35 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:physics` runs it.
+;;
+;; README "Robotics premise": a design-support robot prepares design
+;; concepts, specifications, building-code compliance assessments and client
+;; materials for building architects (ISCO 2161). The physical questions such
+;; compliance turns on: whether a gypsum-board wall keeps its unexposed face
+;; cool for an hour of fire, and how deep rain ponds on a flat roof for a given
+;; outlet.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isco-2161"
+ :cases
+ [{:id :gypsum-wall-fire-insulation
+   :kind :thermal
+   :procedure "gypsum-board wall exposed to the ISO 834 standard fire for 60 minutes: unexposed-face temperature"
+   :params {:conductivity-w-mk 0.25 :density-kg-m3 800.0 :specific-heat-j-kgk 1000.0
+            :t0-c 20.0 :hot-curve :iso-834 :h-front-w-m2k 25.0
+            :t-back-ambient-c 20.0 :h-back-w-m2k 9.0
+            :threshold-c 160.0 :duration-s 3600.0 :nodes 11}
+   :sweep {:param :thickness-m :values [0.0125 0.025 0.05 0.075 0.10]}
+   :quantity :final-back-c
+   :limit {:max 160.0 :basis "ISO 834-1 insulation criterion: mean unexposed-face temperature rise <= 140 K, from 20 C ambient"}
+   :boundary {:lo 0.01 :hi 0.15}}
+  {:id :flat-roof-ponding
+   :kind :tank-drain
+   :procedure "200 m2 flat roof under 100 mm/h rain drains through one outlet; equilibrium ponding depth"
+   :params {:tank-area-m2 200.0 :h0-m 0.0 :h-target-m 0.001 :cd 0.62
+            :q-in-m3s 0.00556 :dt-s 1.0 :max-time-s 3600.0}
+   :sweep {:param :orifice-area-m2 :values [0.004 0.006 0.008 0.010 0.015]}
+   :quantity :equilibrium-level-m
+   :limit {:max 0.05 :basis "estimate: 50 mm ponding taken as the depth a flat roof's upstands and structure are designed to hold; 100 mm/h is an assumed design storm"}
+   :boundary {:lo 0.002 :hi 0.03}}]}
